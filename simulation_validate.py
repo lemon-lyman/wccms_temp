@@ -22,7 +22,7 @@ sphere_r = 20
 
 class inside_surface(SubDomain):
     def inside(self, x, on_boundary):
-        return np.linalg.norm(x - halves) <= sphere_r + .1
+        return x[0] >= 99
 
 class mu_nw(UserExpression):
     def __init__(self, mesh, nu, cell_points, **kwargs):
@@ -133,8 +133,8 @@ lmbda = interpolate(lmbda_inst, sF)
 interpolation, centers, val_per_cell = write_interp2mesh(mesh, mu, file_in, save_tag)
 
 r = Expression(("shrink_r*((halves_x - x[0])/sphere_r)",
-                "shrink_r*((halves_y - x[1])/sphere_r)",
-                "shrink_r*((halves_z - x[2])/sphere_r)"),
+                "x[1])",
+                "x[2]"),
                shrink_r=shrink_r,
                halves_x=halves[0],
                halves_y=halves[1],
