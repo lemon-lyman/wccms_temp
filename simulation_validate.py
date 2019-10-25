@@ -10,11 +10,10 @@ from scipy.spatial import Delaunay
 from dolfin import *
 
 
-max_dist = np.linalg.norm([141.7/2, 141.7/2, 60.5])
-halves = [141.7/2, 141.7/2, 60]
-lower_bound = .01
-upper_bound = 100
-lower_bound = 100
+max_dist = 100
+# lower_bound = .01
+# upper_bound = 1
+lower_bound = 1
 upper_bound = 0.01
 b_slope = (upper_bound - lower_bound)/max_dist
 A = (upper_bound - lower_bound)/(max_dist**2)
@@ -22,7 +21,7 @@ sphere_r = 20
 
 class inside_surface(SubDomain):
     def inside(self, x, on_boundary):
-        return x[0] >= 99
+        return x[0] >= 100 - DOLFIN_EPS
 
 class mu_nw(UserExpression):
     def __init__(self, mesh, nu, cell_points, **kwargs):
@@ -34,10 +33,10 @@ class mu_nw(UserExpression):
         super().__init__(**kwargs)
 
     def eval(self, value, x):
-        dist2cell = np.linalg.norm(self.cell_points - x, axis=1).min()
-        _E = A*(dist2cell**2) + lower_bound
-        # _E = b_slope * dist2cell + lower_bound
-        # _E = 100
+        dist2cell = x[0]
+        # _E = A*(dist2cell**2) + lower_bound
+        _E = b_slope * dist2cell + lower_bound
+        # _E = 1
 
 
         value[0] = _E / (2 * (1 + self.nu))
@@ -50,10 +49,10 @@ class lmbda_nw(UserExpression):
         super().__init__(**kwargs)
 
     def eval(self, value, x):
-        dist2cell = np.linalg.norm(self.cell_points - x, axis=1).min()
-        _E = A*(dist2cell**2) + lower_bound
-        # _E = b_slope * dist2cell + lower_bound
-        # _E = 100
+        dist2cell = x[0]
+        # _E = A*(dist2cell**2) + lower_bound
+        _E = b_slope * dist2cell + lower_bound
+        # _E = 1
 
         value[0] = _E * self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
 
@@ -68,15 +67,15 @@ def write_interp2mesh(mesh, interpolation_PETSc, file_in, save_tag):
                        cells={"tetra": cells},
                        cell_data={"tetra": {"geometrical": val_per_cell}})
     meshio.write("saved_interp/" + file_in + "_" + save_tag + ".vtk", mesh)
-    np.savetxt("saved_interp/" + file_in + "_" + save_tag + "_points.txt", coordinates, delimiter=",")
-    np.savetxt("saved_interp/" + file_in + "_" + save_tag + "_mu.txt", interpolation, delimiter=",")
+    # np.savetxt("saved_interp/" + file_in + "_" + save_tag + "_points.txt", coordinates, delimiter=",")
+    # np.savetxt("saved_interp/" + file_in + "_" + save_tag + "_mu.txt", interpolation, delimiter=",")
     print("written interp2mesh")
     return interpolation, centers, val_per_cell
 
-file_in = sys.argv[1]
-msh_file = sys.argv[2]
-shrink_r = float(sys.argv[3])
-save_tag = sys.argv[4]
+file_in = "beam_hq"
+msh_file = "beam_hq"
+shrink_r = float(sys.argv[1])
+save_tag = sys.argv[2]
 
 mod_const_flag = True
 xy_res = 141.7/512
@@ -109,17 +108,6 @@ u  = Function(V)
 inside = inside_surface()
 inside.mark(subdomains, 500)
 
-zero = Constant((0.0, 0.0, 0.0))
-bcs = []
-sbd = []
-sbd.append(CompiledSubDomain("near(x[0], side)", side = 0))
-sbd.append(CompiledSubDomain("near(x[1], side)", side = 0))
-sbd.append(CompiledSubDomain("near(x[2], side)", side = 0))
-sbd.append(CompiledSubDomain("near(x[0], side)", side = xy_bound))
-sbd.append(CompiledSubDomain("near(x[1], side)", side = xy_bound))
-sbd.append(CompiledSubDomain("near(x[2], side)", side = z_bound))
-[bcs.append((DirichletBC(V, zero, sub))) for sub in sbd]
-
 shrink_list = [.95, .9, .85, .8, .75, .7]
 
 shr0, nu0 = 1.0, 0.45
@@ -132,17 +120,20 @@ lmbda = interpolate(lmbda_inst, sF)
 
 interpolation, centers, val_per_cell = write_interp2mesh(mesh, mu, file_in, save_tag)
 
-r = Expression(("shrink_r*((halves_x - x[0])/sphere_r)",
-                "x[1])",
-                "x[2]"),
+r = Expression(("shrink_r",
+                "0",
+                "0"),
                shrink_r=shrink_r,
-               halves_x=halves[0],
-               halves_y=halves[1],
-               halves_z=halves[2],
-               sphere_r=sphere_r,
                degree=2)
 
-bcs.append(DirichletBC(V, r, inside))
+
+zero = Constant((0.0, 0.0, 0.0))
+bcs = []
+sbd = []
+sbd.append(CompiledSubDomain("near(x[0], side)", side = 0))
+[bcs.append((DirichletBC(V, zero, sub))) for sub in sbd]
+end = CompiledSubDomain("near(x[0], side) && on_boundary", side = 100)
+bcs.append(DirichletBC(V, r, end))
 
 d = len(u)
 I = Identity(d)

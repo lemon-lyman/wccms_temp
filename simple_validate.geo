@@ -1,5 +1,5 @@
 tol = .05;
-avg_len = 2;
+avg_len = .8;
 lc = 10;
 
 

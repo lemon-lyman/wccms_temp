@@ -8,7 +8,7 @@ def tags2labels(tags):
     label_list = []
     for tag in tags:
         split_out = tag.split('_')
-        if len(split_out) == 3:
+        if len(split_out) == 2:
             if 'old' in tag:
                 if split_out[-1] == '1111':
                     label_list.append("E = 0.1 Old Model")
@@ -20,13 +20,10 @@ def tags2labels(tags):
                 else:
                     label_list.append("E = " + split_out[-1])
         else:
-            if 'lin' in split_out[1]:
-                if split_out[2] == '1111':
-                    label_list.append("Linear 0.1 < E < " + split_out[-1])
-                else:
-                    label_list.append("Linear " + split_out[2] + " < E < " + split_out[-1])
-            elif 'exp' in split_out[1]:
-                label_list.append("Exp. " + split_out[2] + " < E < " + split_out[-1])
+            if 'lin' in split_out:
+                label_list.append("Linear " + split_out[1] + " < E < " + split_out[-1])
+            elif 'exp' in split_out:
+                label_list.append("Exp.    " + split_out[1] + " < E < " + split_out[-1])
             else:
                 if split_out[-1] == '1111':
                     label_list.append("E = 0.1 Old Model")
@@ -45,7 +42,7 @@ xy_bound = 141.7
 z_bound = 120
 nbeads = 4000
 color_list = ['r', 'orange', 'y', 'chartreuse', 'g', 'deepskyblue']
-color_list = ['g', 'r', 'k', 'g', 'r']
+color_list = ['g', 'b', 'k', 'r', 'y']
 
 mesh = Mesh()
 with XDMFFile("MeshesXDMF/" + file_in + ".xdmf") as infile:
@@ -63,9 +60,11 @@ du = TrialFunction(V)
 v  = TestFunction(V)
 u  = Function(V)
 
-tag_list = ['big_const_100',
-            'big_lin_100_0.01',
-            'big_exp_100_0.01']
+tag_list = ['lin_0.01_1',
+            'exp_0.01_1',
+            'const_1',
+            'lin_1_0.01',
+            'exp_1_0.01']
 
 x_values = np.linspace((xy_bound/2) + sphere_r, xy_bound, 1000)
 y = xy_bound/2
@@ -100,7 +99,7 @@ for save_tag in tag_list:
         disp = np.array([np.linalg.norm(old_u(x, y, z)) for x in x_values])
     else:
         hdf5_file = HDF5File(mesh.mpi_comm(),
-                             "saved_functions/" + file_in + "_10.0_" + save_tag + "_func.h5",
+                             "saved_functions/" + file_in + "_3.0_" + save_tag + "_func.h5",
                              "r")
         hdf5_file.read(u, "/function")
         hdf5_file.close()
@@ -118,7 +117,8 @@ for save_tag in tag_list:
     #     ls='--'
     if iter_count==1:
         ls = "--"
-    ax.plot(x_values - xy_bound/2, disp,
+    ax.plot(x_values - xy_bound/2,
+            disp,
             LineWidth=2,
             c=color_list[iter_count],
             zorder=zord,
@@ -131,5 +131,5 @@ ax.set_ylabel('Displacement (um)')
 ax.set_xlabel('Distance from center of cell (um)')
 ax.set_title("Continuous Displacement")
 # ax.set_aspect(.5)
-ax.set_ylim([0, 10.5])
+ax.set_ylim([0, 3.5])
 plt.savefig("pics_temp/temp.png")

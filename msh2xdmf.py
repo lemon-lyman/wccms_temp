@@ -30,10 +30,10 @@ def remap_mesh(mesh):
     print("remap time: ", time.time() - remap_start)
     return mesh
 
-old_mesh = meshio.read("MeshesMSH/sphere_vol.msh")
+old_mesh = meshio.read("MeshesMSH/beam_hq.msh")
 new_mesh = remap_mesh(old_mesh)
-meshio.write("MeshesXDMF/sphere.xdmf", meshio.Mesh(points=new_mesh.points, cells={"tetra": new_mesh.cells["tetra"]}))
-meshio.write("MeshesXDMF/sphere_function.xdmf", meshio.Mesh(points=new_mesh.points, cells={"tetra": new_mesh.cells["tetra"]},
+meshio.write("MeshesXDMF/beam_hq.xdmf", meshio.Mesh(points=new_mesh.points, cells={"tetra": new_mesh.cells["tetra"]}))
+meshio.write("MeshesXDMF/beam_hq_function.xdmf", meshio.Mesh(points=new_mesh.points, cells={"tetra": new_mesh.cells["tetra"]},
                         cell_data={"tetra": {"geometrical": new_mesh.cell_data["tetra"]["gmsh:geometrical"]}}))
 
 # read_path = 'skeleton_stuff/'
