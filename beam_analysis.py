@@ -57,11 +57,9 @@ du = TrialFunction(V)
 v  = TestFunction(V)
 u  = Function(V)
 
-tag_list = ['1_lin_0.01_100',
-            '1_exp_0.01_100',
-            '1_const_1',
-            '1_lin_100_0.01',
-            '1_exp_100_0.01']
+tag_list = ['1_lin_100_0.01',
+            '1_exp_100_0.01',
+            '1_const_1']
 
 x_values = np.linspace(0, 100, 2000)
 y = 5
@@ -84,7 +82,7 @@ for save_tag in tag_list:
     ls = '-'
     if iter_count>2:
         ls = "--"
-    ax.plot(x_values,
+    ax.plot(np.flip(x_values, axis=0),
             disp,
             LineWidth=2,
             c=color_list[iter_count],
@@ -93,9 +91,9 @@ for save_tag in tag_list:
             linestyle=ls)
     iter_count = iter_count + 1
 
-ax.legend(tags2labels(tag_list))
+ax.legend(['Linear 0.01 < E < 100', 'Exp. 0.01 < E < 100', 'E = 1'])
 ax.set_ylabel('Displacement (um)')
-ax.set_xlabel('Distance from center of cell (um)')
+ax.set_xlabel('Distance from moving boundary (um)')
 ax.set_title("Continuous Displacement")
 # ax.set_aspect(.5)
 ax.set_ylim([0, 1.5])

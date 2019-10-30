@@ -20,6 +20,15 @@ b_slope = (upper_bound - lower_bound)/max_dist
 A = (upper_bound - lower_bound)/(max_dist**2)
 sphere_r = 20
 
+###################################
+###################################
+# start = (0, 1)
+# stop = (max_dist, 0.01)
+# offset = stop[0]
+# A = (start[1] - stop[1])/((start[0] - offset)**2)
+###################################
+###################################
+
 class inside_surface(SubDomain):
     def inside(self, x, on_boundary):
         return np.linalg.norm(x - halves) <= sphere_r + .1
@@ -34,10 +43,10 @@ class mu_nw(UserExpression):
         super().__init__(**kwargs)
 
     def eval(self, value, x):
-        # dist2cell = np.linalg.norm(self.cell_points - x, axis=1).min()
-        # _E = A*(dist2cell**2) + lower_bound
+        dist2cell = np.linalg.norm(self.cell_points - x, axis=1).min()
+        _E = A*(dist2cell**2) + lower_bound
         # _E = b_slope * dist2cell + lower_bound
-        _E = 1
+        # _E = 1
 
 
         value[0] = _E / (2 * (1 + self.nu))
@@ -50,10 +59,10 @@ class lmbda_nw(UserExpression):
         super().__init__(**kwargs)
 
     def eval(self, value, x):
-        # dist2cell = np.linalg.norm(self.cell_points - x, axis=1).min()
-        # _E = A*(dist2cell**2) + lower_bound
+        dist2cell = np.linalg.norm(self.cell_points - x, axis=1).min()
+        _E = A*(dist2cell**2) + lower_bound
         # _E = b_slope * dist2cell + lower_bound
-        _E = 1
+        # _E = 1
 
         value[0] = _E * self.nu / ((1 + self.nu) * (1 - 2 * self.nu))
 

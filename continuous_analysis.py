@@ -22,6 +22,8 @@ def tags2labels(tags):
         else:
             if 'lin' in split_out:
                 label_list.append("Linear " + split_out[1] + " < E < " + split_out[-1])
+            elif 'lins' in split_out:
+                label_list.append("Lins.    " + split_out[1] + " < E < " + split_out[-1])
             elif 'exp' in split_out:
                 label_list.append("Exp.    " + split_out[1] + " < E < " + split_out[-1])
             else:
@@ -61,9 +63,7 @@ v  = TestFunction(V)
 u  = Function(V)
 
 tag_list = ['lin_0.01_1',
-            'exp_0.01_1',
             'const_1',
-            'lin_1_0.01',
             'exp_1_0.01']
 
 x_values = np.linspace((xy_bound/2) + sphere_r, xy_bound, 1000)
@@ -72,6 +72,8 @@ z = z_bound/2
 
 fig, ax = plt.subplots()
 iter_count = 0
+
+disp_list = []
 
 for save_tag in tag_list:
 
@@ -97,6 +99,7 @@ for save_tag in tag_list:
         hdf5_file.read(old_u, "/function")
         hdf5_file.close()
         disp = np.array([np.linalg.norm(old_u(x, y, z)) for x in x_values])
+        # disp_list.append(np.array([np.linalg.norm(old_u(x, y, z)) for x in x_values]))
     else:
         hdf5_file = HDF5File(mesh.mpi_comm(),
                              "saved_functions/" + file_in + "_3.0_" + save_tag + "_func.h5",
@@ -104,6 +107,7 @@ for save_tag in tag_list:
         hdf5_file.read(u, "/function")
         hdf5_file.close()
         disp = np.array([np.linalg.norm(u(x, y, z)) for x in x_values])
+        # disp_list.append(np.array([np.linalg.norm(u(x, y, z)) for x in x_values]))
     zord=1
     aa = 1
     ls = '-'
@@ -126,6 +130,15 @@ for save_tag in tag_list:
             linestyle=ls)
     iter_count = iter_count + 1
 
+# for iter_count, disp in enumerate(disp_list):
+#     ax.plot(x_values - xy_bound / 2,
+#             disp - disp_list[1],
+#             LineWidth=2,
+#             c=color_list[iter_count],
+#             zorder=zord,
+#             alpha=aa,
+#             linestyle=ls)
+
 ax.legend(tags2labels(tag_list))
 ax.set_ylabel('Displacement (um)')
 ax.set_xlabel('Distance from center of cell (um)')
@@ -133,3 +146,4 @@ ax.set_title("Continuous Displacement")
 # ax.set_aspect(.5)
 ax.set_ylim([0, 3.5])
 plt.savefig("pics_temp/temp.png")
+# plt.show()
